@@ -1,0 +1,28 @@
+# Make sure to check the documentation at http://goreleaser.com
+before:
+  hooks:
+    - sh -c "go mod download"
+builds:
+  - id: example-app
+    binary: example-app
+    dir: .
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - windows
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+release:
+  prerelease: true
+archives:
+  - format: binary
+    rlcp: true
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  skip: true
