@@ -36,6 +36,8 @@ type app struct {
 	// or does it use "access_type=offline" (e.g. Google)?
 	offlineAsScope bool
 
+	scopeGroups bool
+
 	client *http.Client
 }
 
@@ -90,13 +92,14 @@ func (d debugTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 func cmd() *cobra.Command {
 	var (
-		a         app
-		issuerURL string
-		listen    string
-		tlsCert   string
-		tlsKey    string
-		rootCAs   string
-		debug     bool
+		a           app
+		issuerURL   string
+		listen      string
+		tlsCert     string
+		tlsKey      string
+		rootCAs     string
+		debug       bool
+		scopeGroups bool
 	)
 	c := cobra.Command{
 		Use:   "example-app",
@@ -171,6 +174,7 @@ func cmd() *cobra.Command {
 					return false
 				}()
 			}
+			a.scopeGroups = scopeGroups
 
 			a.provider = provider
 			a.verifier = provider.Verifier(&oidc.Config{ClientID: a.clientID})
@@ -200,6 +204,7 @@ func cmd() *cobra.Command {
 	c.Flags().StringVar(&tlsKey, "tls-key", "", "Private key for the HTTPS cert.")
 	c.Flags().StringVar(&rootCAs, "issuer-root-ca", "", "Root certificate authorities for the issuer. Defaults to host certs.")
 	c.Flags().BoolVar(&debug, "debug", false, "Print all request and responses from the OpenID Connect issuer.")
+	c.Flags().BoolVar(&scopeGroups, "groups", false, "Add 'groups' in OIDC scopes list")
 	return &c
 }
 
@@ -243,6 +248,12 @@ func (a *app) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	authCodeURL := ""
 	scopes = append(scopes, "openid", "profile", "email")
+	if a.scopeGroups {
+		scopes = append(scopes, "groups")
+	}
+
+	log.Printf("scopes: %v\n", scopes)
+
 	if r.FormValue("offline_access") != "yes" {
 		authCodeURL = a.oauth2Config(scopes).AuthCodeURL(exampleAppState)
 	} else if a.offlineAsScope {

@@ -2,7 +2,7 @@
 
 UNCOMMITTED="yes"
 
-VERSION=2.37.0
+VERSION=2.37.1
 
 if [ "x$VERSION" == "x" ]; then
   echo "Please export VERSION=X.X.X"
