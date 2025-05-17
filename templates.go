@@ -50,6 +50,7 @@ type tokenTmplData struct {
 	RefreshToken string
 	RedirectURL  string
 	Claims       string
+	LogoutURL    string
 }
 
 var tokenTmpl = template.Must(template.New("token.html").Parse(`<html>
@@ -76,17 +77,21 @@ pre {
 	  <input type="submit" value="Redeem refresh token">
     </form>
 	{{ end }}
+	{{ if ne .LogoutURL "" }}
+	<a href="{{.LogoutURL}}">Logout</a>
+	{{ end }}
   </body>
 </html>
 `))
 
-func renderToken(w http.ResponseWriter, redirectURL, idToken, accessToken, refreshToken, claims string) {
+func renderToken(w http.ResponseWriter, redirectURL, idToken, accessToken, refreshToken, claims string, logoutUrl string) {
 	renderTemplate(w, tokenTmpl, tokenTmplData{
 		IDToken:      idToken,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		RedirectURL:  redirectURL,
 		Claims:       claims,
+		LogoutURL:    logoutUrl,
 	})
 }
 

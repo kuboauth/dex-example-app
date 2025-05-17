@@ -39,6 +39,8 @@ type app struct {
 	scopeGroups bool
 
 	client *http.Client
+
+	logoutUrl string // "" if the provide des not provide it.
 }
 
 // return an HTTP client which trusts the provided root CAs.
@@ -146,6 +148,12 @@ func cmd() *cobra.Command {
 			provider, err := oidc.NewProvider(ctx, issuerURL)
 			if err != nil {
 				return fmt.Errorf("failed to query provider %q: %v", issuerURL, err)
+			}
+			// the coreos/go-oidc does not provide logout info. We fetch .well-known/openid-configuration again to retrieve it
+			// Alternative would be to fort coreos/go-oidc)
+			a.logoutUrl, err = getLogoutUrl(ctx, issuerURL)
+			if err != nil {
+				return fmt.Errorf("failed to query provider %q for logout URL: %v", issuerURL, err)
 			}
 
 			var s struct {
@@ -346,5 +354,5 @@ func (a *app) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	renderToken(w, a.redirectURI, rawIDToken, accessToken, token.RefreshToken, buff.String())
+	renderToken(w, a.redirectURI, rawIDToken, accessToken, token.RefreshToken, buff.String(), a.logoutUrl)
 }
